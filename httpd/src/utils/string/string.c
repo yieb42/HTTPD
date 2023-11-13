@@ -42,8 +42,10 @@ void string_concat_str(struct string *str, const char *to_concat, size_t size)
     {
         concat[i] = to_concat[i - str->size + 1];
     }
+    free(str->data);
     str->data = malloc(str->size + size);
     str->data = concat;
+    str->size = str->size + size;
     free(concat);
 }
 
