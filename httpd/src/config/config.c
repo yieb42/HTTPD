@@ -1,3 +1,5 @@
+#define _POSIX_C_SOURCE 200809L
+
 #include "config.h"
 #include <string.h>
 #include <stdio.h>
@@ -22,7 +24,6 @@ struct config *parse_configuration(const char *path)
     //char *line = NULL;
     size_t len = 0;
     ssize_t read;
-    bool pid_pres = false;
     conf->nb_servers = 0;
     int num_mand = 0;
     //while(fgets(buff,1024,fp) != NULL)
@@ -53,7 +54,6 @@ struct config *parse_configuration(const char *path)
             if(!strcmp(field,"pid_file"))
             {
                 num_mand++;
-                pid_pres = true;
                 field = strtok(NULL, " = ");
                 conf->pid_file = remove_line_return(strdup(field));
             }
