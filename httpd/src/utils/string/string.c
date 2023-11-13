@@ -34,7 +34,7 @@ int string_compare_n_str(const struct string *str1, const char *str2, size_t n)
 void string_concat_str(struct string *str, const char *to_concat, size_t size)
 {
     size_t size_init = str->size;
-    str->data = realloc(str->size + size);
+    str->data = realloc(str->data, str->size + size);
     str->size += size;
     for(size_t i = 0;i < size;i++)
     {
