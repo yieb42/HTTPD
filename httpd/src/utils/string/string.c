@@ -33,20 +33,13 @@ int string_compare_n_str(const struct string *str1, const char *str2, size_t n)
 
 void string_concat_str(struct string *str, const char *to_concat, size_t size)
 {
-    char *concat = malloc(str->size + size);
-    for(size_t j = 0; j < str->size;j++)
+    size_t size_init = str->size;
+    str->data = realloc(str->size + size);
+    str->size += size;
+    for(size_t i = 0;i < size;i++)
     {
-        concat[j] = str->data[j];
+        str->data[size_init - 1 + i] = to_concat[i];
     }
-    for(size_t i = str->size - 1;i < str->size + size;i++)
-    {
-        concat[i] = to_concat[i - str->size + 1];
-    }
-    free(str->data);
-    str->data = malloc(str->size + size);
-    str->data = concat;
-    str->size = str->size + size;
-    free(concat);
 }
 
 void string_destroy(struct string *str)
