@@ -7,6 +7,7 @@ struct string *string_create(const char *str, size_t size)
 {
     struct string *string = malloc(sizeof(struct string));
     string->size = size;
+    string->data = malloc(size);
     for(size_t i = 0;i<size;i++)
     {
         string->data[i] = str[i];
@@ -41,6 +42,9 @@ void string_concat_str(struct string *str, const char *to_concat, size_t size)
     {
         concat[i] = to_concat[i - str->size + 1];
     }
+    str->data = malloc(str->size + size);
+    str->data = concat;
+    free(concat);
 }
 
 void string_destroy(struct string *str)
