@@ -49,7 +49,9 @@ struct config *parse_configuration(const char *path) {
             if (conf->nb_servers > 1) {
                 conf->servers = realloc(conf->servers, sizeof(struct server_config) * conf->nb_servers);
             }
-            conf->servers[conf->nb_servers - 1].server_name = NULL;
+            conf->servers[conf->nb_servers - 1].server_name = calloc(1,sizeof(struct string));
+            conf->servers[conf->nb_servers - 1].server_name->data = NULL;
+            conf->servers[conf->nb_servers - 1].server_name->size = 0;
             conf->servers[conf->nb_servers - 1].port = NULL;
             conf->servers[conf->nb_servers - 1].ip = NULL;
             conf->servers[conf->nb_servers - 1].root_dir = NULL;
