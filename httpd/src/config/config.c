@@ -75,7 +75,7 @@ struct config *parse_configuration(const char *path)
                 field = strtok(NULL," = ");
                 conf->servers[conf->nb_servers - 1].server_name = malloc(sizeof(struct string));
                 conf->servers[conf->nb_servers - 1].server_name->data = remove_line_return(strdup(field));
-                conf->servers[conf->nb_servers - 1].server_name->size = strlen(field);
+                conf->servers[conf->nb_servers - 1].server_name->size = strlen(field) - 1;
             }
             if(!strcmp(field,"port"))
             {
@@ -106,6 +106,7 @@ struct config *parse_configuration(const char *path)
     //conf->servers = server;
     if (num_mand != 5)
     {
+        config_destroy(conf);
         return NULL;
     }
 
