@@ -14,7 +14,7 @@ char *remove_line_return(char *conf)
 struct config *parse_configuration(const char *path)
 {
     struct config *conf = malloc(sizeof(struct config));
-    struct server_config *server = malloc(sizeof(struct server_config));
+    conf->servers = malloc(sizeof(struct server_config));
     FILE *fp = fopen(path,"r");
     if (!fp)
     {
@@ -40,7 +40,7 @@ struct config *parse_configuration(const char *path)
         if (!strcmp(buff,"[[vhosts]]\n"))
         {
             conf->nb_servers++;
-            server = realloc(server,sizeof(struct server_config) * conf->nb_servers);
+            conf->servers = realloc(server,sizeof(struct server_config) * conf->nb_servers);
             continue;
         }
         char *field = strtok(buff, " = ");
@@ -73,45 +73,37 @@ struct config *parse_configuration(const char *path)
             {
                 num_mand++;
                 field = strtok(NULL," = ");
-                server[conf->nb_servers - 1].server_name = malloc(sizeof(struct string));
-                server[conf->nb_servers - 1].server_name->data = remove_line_return(strdup(field));
-                server[conf->nb_servers - 1].server_name->size = strlen(field);
+                conf->servers[conf->nb_servers - 1].server_name = malloc(sizeof(struct string));
+                conf->servers[conf->nb_servers - 1].server_name->data = remove_line_return(strdup(field));
+                conf->servers[conf->nb_servers - 1].server_name->size = strlen(field);
             }
             if(!strcmp(field,"port"))
             {
                 num_mand++;
                 field = strtok(NULL, " = ");
-                server[conf->nb_servers - 1].port = remove_line_return(strdup(field));
+                conf->servers[conf->nb_servers - 1].port = remove_line_return(strdup(field));
             }
             if(!strcmp(field, "ip"))
             {
                 num_mand++;
                 field = strtok(NULL, " = ");
-                server[conf->nb_servers - 1].ip = remove_line_return(strdup(field));
+                conf->servers[conf->nb_servers - 1].ip = remove_line_return(strdup(field));
             }
             if(!strcmp(field,"default_file"))
             {
                 field = strtok(NULL, " = ");
-                server[conf->nb_servers - 1].default_file = remove_line_return(strdup(field));
+                conf->servers[conf->nb_servers - 1].default_file = remove_line_return(strdup(field));
             }
             if(!strcmp(field,"root_dir"))
             {
                 num_mand++;
                 field = strtok(NULL," = ");
-                server[conf->nb_servers - 1].root_dir = remove_line_return(strdup(field));
+                conf->servers[conf->nb_servers - 1].root_dir = remove_line_return(strdup(field));
             }
             field = strtok(NULL, " = ");
         }
     }
-    conf->servers = server;
-    free(server->server_name->data);
-    free(server->server_name);
-    free(server->port);
-    free(server->ip);
-    free(server->root_dir);
-    if (server->default_file)
-        free(server->default_file);
-    free(server);
+    //conf->servers = server;
     if (num_mand != 5)
     {
         return NULL;
