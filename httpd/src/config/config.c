@@ -56,7 +56,8 @@ struct config *parse_configuration(const char *path)
         if (!strcmp(buff,"[[vhosts]]\n"))
         {
             conf->nb_servers++;
-            conf->servers = realloc(conf->servers,sizeof(struct server_config) * conf->nb_servers);
+            if (conf->nb_servers > 1)
+                conf->servers = realloc(conf->servers,sizeof(struct server_config) * conf->nb_servers);
             continue;
         }
         char *field = strtok(buff, " = ");
