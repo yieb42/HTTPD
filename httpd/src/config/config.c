@@ -78,7 +78,7 @@ struct config *parse_configuration(const char *path) {
             if (!strcmp(field, "server_name")) {
                 num_mand++;
                 field = strtok(NULL, " = ");
-                conf->servers[conf->nb_servers - 1].server_name = calloc(sizeof(struct string));
+                conf->servers[conf->nb_servers - 1].server_name = calloc(1,sizeof(struct string));
                 conf->servers[conf->nb_servers - 1].server_name->data = remove_line_return(strdup(field));
                 conf->servers[conf->nb_servers - 1].server_name->size = strlen(field) - 1;
             }
