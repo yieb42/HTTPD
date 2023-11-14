@@ -7,7 +7,7 @@
 
 char *remove_line_return(char *conf)
 {
-    //conf[strcspn(conf, "\n")] = 0;
+    conf[strcspn(conf, "\n")] = 0;
     return conf;
 }
 
