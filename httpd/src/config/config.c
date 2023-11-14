@@ -104,6 +104,13 @@ struct config *parse_configuration(const char *path)
         }
     }
     conf->servers = server;
+    free(server->server_name->data);
+    free(server->server_name);
+    free(server->port);
+    free(server->ip);
+    free(server->root_dir);
+    free(default_file);
+    free(server);
     if (num_mand != 5)
     {
         return NULL;
