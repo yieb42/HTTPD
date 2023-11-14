@@ -109,7 +109,8 @@ struct config *parse_configuration(const char *path)
     free(server->port);
     free(server->ip);
     free(server->root_dir);
-    free(server->default_file);
+    if (server->default_file)
+        free(server->default_file);
     free(server);
     if (num_mand != 5)
     {
