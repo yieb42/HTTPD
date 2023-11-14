@@ -122,7 +122,8 @@ struct config *parse_configuration(const char *path) {
 }
 
 void config_destroy(struct config *config) {
-    free(config->servers->server_name->data);
+    if (config->servers->server_name->data)
+        free(config->servers->server_name->data);
     free(config->servers->server_name);
     for (size_t i = 0; i < config->nb_servers; i++) {
         free(config->servers[i].port);
