@@ -25,7 +25,7 @@ bool check_config(struct config *conf) {
 }
 struct config *parse_configuration(const char *path) {
     struct config *conf = calloc(1,sizeof(struct config));
-    conf->servers = malloc(1,sizeof(struct server_config));
+    conf->servers = malloc(sizeof(struct server_config));
     FILE *fp = fopen(path, "r");
     if (!fp) {
         return NULL;
