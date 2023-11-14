@@ -38,7 +38,7 @@ void string_concat_str(struct string *str, const char *to_concat, size_t size)
     str->size += size;
     for(size_t i = 0;i < size;i++)
     {
-        str->data[size_init - 1 + i] = to_concat[i];
+        str->data[size_init + i] = to_concat[i];
     }
 }
 
