@@ -32,6 +32,7 @@ struct config *parse_configuration(const char *path)
 {
     struct config *conf = calloc(1, sizeof(struct config));
     conf->servers = malloc(sizeof(struct server_config));
+    conf->log = true;
     FILE *fp = fopen(path, "r");
     if (!fp)
     {
@@ -63,7 +64,7 @@ struct config *parse_configuration(const char *path)
                     realloc(conf->servers,
                             sizeof(struct server_config) * conf->nb_servers);
             }
-            conf->servers[conf->nb_servers - 1].server_name = string_create(NULL,0);
+            conf->servers[conf->nb_servers - 1].server_name = NULL;//string_create(NULL,0);
             conf->servers[conf->nb_servers - 1].port = NULL;
             conf->servers[conf->nb_servers - 1].ip = NULL;
             conf->servers[conf->nb_servers - 1].root_dir = NULL;
@@ -158,8 +159,11 @@ struct config *parse_configuration(const char *path)
 
 void config_destroy(struct config *config)
 {
-    free(config->servers->server_name->data);
-    free(config->servers->server_name);
+    if (config->servers->server_name)
+    {
+        free(config->servers->server_name->data);
+        free(config->servers->server_name);
+    }
     for (size_t i = 0; i < config->nb_servers; i++)
     {
         free(config->servers[i].port);
