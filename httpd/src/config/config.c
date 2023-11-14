@@ -25,7 +25,7 @@ bool check_config(struct config *conf) {
 }
 struct config *parse_configuration(const char *path) {
     struct config *conf = calloc(1,sizeof(struct config));
-    conf->servers = calloc(1,sizeof(struct server_config));
+    conf->servers = malloc(1,sizeof(struct server_config));
     FILE *fp = fopen(path, "r");
     if (!fp) {
         return NULL;
@@ -49,7 +49,8 @@ struct config *parse_configuration(const char *path) {
             if (conf->nb_servers > 1) {
                 conf->servers = realloc(conf->servers, sizeof(struct server_config) * conf->nb_servers);
             }
-            conf->servers[conf->nb_servers -1].server_name = NULL;
+            conf->servers[conf->nb_servers -1].server_name->data = NULL;
+            conf->servers[conf->nb_servers -1].server_name->size = 0;
             conf->servers[conf->nb_servers -1].port = NULL;
             conf->servers[conf->nb_servers -1].ip = NULL;
             conf->servers[conf->nb_servers -1].root_dir = NULL;
@@ -105,7 +106,7 @@ struct config *parse_configuration(const char *path) {
         }
     }
     //conf->servers = server;
-    if (check_config(conf) == false || num_mand % 5 != 0) {
+    if (check_config(conf) == false || num_mand % 5 != 0 || conf->nb_servers == 0) {
         config_destroy(conf);
         return NULL;
     }
