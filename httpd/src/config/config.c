@@ -25,7 +25,7 @@ bool check_config(struct config *conf) {
 }
 struct config *parse_configuration(const char *path) {
     struct config *conf = calloc(1,sizeof(struct config));
-    conf->servers = malloc(sizeof(struct server_config));
+    conf->servers = calloc(1,sizeof(struct server_config));
     FILE *fp = fopen(path, "r");
     if (!fp) {
         return NULL;
@@ -48,12 +48,12 @@ struct config *parse_configuration(const char *path) {
             conf->nb_servers++;
             if (conf->nb_servers > 1) {
                 conf->servers = realloc(conf->servers, sizeof(struct server_config) * conf->nb_servers);
-                conf->servers[conf->nb_servers -1].server_name = NULL;
-                conf->servers[conf->nb_servers -1].port = NULL;
-                conf->servers[conf->nb_servers -1].ip = NULL;
-                conf->servers[conf->nb_servers -1].root_dir = NULL;
-                conf->servers[conf->nb_servers -1].default_file = NULL;
             }
+            conf->servers[conf->nb_servers -1].server_name = NULL;
+            conf->servers[conf->nb_servers -1].port = NULL;
+            conf->servers[conf->nb_servers -1].ip = NULL;
+            conf->servers[conf->nb_servers -1].root_dir = NULL;
+            conf->servers[conf->nb_servers -1].default_file = NULL;
             continue;
         }
         char *field = strtok(buff, " = ");
