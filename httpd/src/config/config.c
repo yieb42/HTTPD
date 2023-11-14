@@ -134,10 +134,13 @@ void config_destroy(struct config *config)
 {
     free(config->servers->server_name->data);
     free(config->servers->server_name);
-    free(config->servers->port);
-    free(config->servers->ip);
-    free(config->servers->root_dir);
-    free(config->servers->default_file);
+    for (size_t i = 0; i < config->nb_servers; i++)
+    {
+        free(config->servers[i].port);
+        free(config->servers[i].ip);
+        free(config->servers[i].root_dir);
+        free(config->servers[i].default_file);
+    }
     free(config->servers);
     free(config->pid_file);
     free(config->log_file);
