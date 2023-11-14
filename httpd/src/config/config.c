@@ -11,6 +11,22 @@ char *remove_line_return(char *conf)
     return conf;
 }
 
+bool check_config(struct config *conf)
+{
+    if (conf->nb_servers == 0)
+        return false;
+    if (!conf->pid_file)
+        return false;
+    for (size_t i = 0; i < conf->nb_servers;i++)
+    {
+        if (!conf->servers[i].server_name || !conf->servers[i].port || !conf->servers[i].ip || !conf->servers[i].root_dir)
+        {
+            return false;
+        }
+    }
+    return true;
+}
+
 struct config *parse_configuration(const char *path)
 {
     struct config *conf = malloc(sizeof(struct config));
@@ -104,7 +120,7 @@ struct config *parse_configuration(const char *path)
         }
     }
     //conf->servers = server;
-    if (num_mand%5 != 0)
+    if (check_config(conf) == false || num_mand%5 != 0)
     {
         config_destroy(conf);
         return NULL;
