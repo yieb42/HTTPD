@@ -63,7 +63,7 @@ struct config *parse_configuration(const char *path)
                     realloc(conf->servers,
                             sizeof(struct server_config) * conf->nb_servers);
             }
-            conf->servers[conf->nb_servers - 1].server_name = NULL;
+            conf->servers[conf->nb_servers - 1].server_name = string_create(NULL,0);
             conf->servers[conf->nb_servers - 1].port = NULL;
             conf->servers[conf->nb_servers - 1].ip = NULL;
             conf->servers[conf->nb_servers - 1].root_dir = NULL;
