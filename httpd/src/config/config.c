@@ -39,19 +39,12 @@ struct config *parse_configuration(const char *path)
         return NULL;
     }
     char *buff = NULL;
-    // char *line = NULL;
     size_t len = 0;
     ssize_t read;
     conf->nb_servers = 0;
-    int num_mand = 0;
-    // while(fgets(buff,1024,fp) != NULL)
     while ((read = getline(&buff, &len, fp)) != -1)
     {
-        if (!strcmp(buff, "[global]\n"))
-        {
-            continue;
-        }
-        if (!strcmp(buff, "\n"))
+        if (!strcmp(buff, "[global]\n") || !strcmp(buff, "\n"))
         {
             continue;
         }
@@ -64,7 +57,8 @@ struct config *parse_configuration(const char *path)
                     realloc(conf->servers,
                             sizeof(struct server_config) * conf->nb_servers);
             }
-            conf->servers[conf->nb_servers - 1].server_name = NULL;//string_create(NULL,0);
+            conf->servers[conf->nb_servers - 1].server_name =
+                NULL;
             conf->servers[conf->nb_servers - 1].port = NULL;
             conf->servers[conf->nb_servers - 1].ip = NULL;
             conf->servers[conf->nb_servers - 1].root_dir = NULL;
@@ -81,7 +75,6 @@ struct config *parse_configuration(const char *path)
             }
             if (!strcmp(field, "pid_file"))
             {
-                num_mand++;
                 field = strtok(NULL, " = ");
                 conf->pid_file = remove_line_return(strdup(field));
             }
@@ -99,7 +92,6 @@ struct config *parse_configuration(const char *path)
             }
             if (!strcmp(field, "server_name"))
             {
-                num_mand++;
                 field = strtok(NULL, " = ");
                 conf->servers[conf->nb_servers - 1].server_name =
                     calloc(1, sizeof(struct string));
@@ -110,14 +102,12 @@ struct config *parse_configuration(const char *path)
             }
             if (!strcmp(field, "port"))
             {
-                num_mand++;
                 field = strtok(NULL, " = ");
                 conf->servers[conf->nb_servers - 1].port =
                     remove_line_return(strdup(field));
             }
             if (!strcmp(field, "ip"))
             {
-                num_mand++;
                 field = strtok(NULL, " = ");
                 conf->servers[conf->nb_servers - 1].ip =
                     remove_line_return(strdup(field));
@@ -130,7 +120,6 @@ struct config *parse_configuration(const char *path)
             }
             if (!strcmp(field, "root_dir"))
             {
-                num_mand++;
                 field = strtok(NULL, " = ");
                 conf->servers[conf->nb_servers - 1].root_dir =
                     remove_line_return(strdup(field));
@@ -138,7 +127,6 @@ struct config *parse_configuration(const char *path)
             field = strtok(NULL, " = ");
         }
     }
-    // conf->servers = server;
     if (conf->nb_servers == 0)
     {
         free(conf->servers);
@@ -147,7 +135,7 @@ struct config *parse_configuration(const char *path)
         free(conf);
         return NULL;
     }
-    if (check_config(conf) == false || num_mand % 5 != 0)
+    if (check_config(conf) == false)
     {
         config_destroy(conf);
         return NULL;
