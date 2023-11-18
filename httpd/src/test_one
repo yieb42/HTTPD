@@ -1,5 +1,5 @@
 [global]
-log_file = server.log
+log_file = LOGFILE
 log = true
 pid_file = /tmp/HTTPd.pid
 

@@ -1,16 +1,15 @@
 include ../flags.mk
 
-MODULE = config
-OBJ = $(MODULE).o
+MODULE = http
+OBJ = parse_request.o create_response.o
 LIB = lib$(MODULE).a
 
-LIBS = utils/libutils.a \
-	   logger/liblogger.a # Other modules your library may be dependent on
+LIBS = logger/liblogger.a # Other modules your library may be dependent on
 
 LDLIBS = -lcriterion
 
-TEST_OBJ = tests/$(MODULE)_test.o
-TEST_BIN = tests/$(MODULE)_test
+#TEST_OBJ = tests/$(MODULE)_test.o
+#TEST_BIN = tests/$(MODULE)_test
 
 $(MODULE): $(LIB)($(OBJ))
 

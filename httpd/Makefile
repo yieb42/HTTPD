@@ -10,4 +10,7 @@ $(BINARY):
 	$(MAKE) -C src
 	mv src/$(BINARY) .
 
+clean:
+	$(RM) $(OBJ) $(LIB) $(TEST_BIN) $(TEST_OBJ) $(addprefix $(SRC_DIR), $(LIBS))
+
 .PHONY: all

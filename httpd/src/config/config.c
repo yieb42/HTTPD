@@ -6,6 +6,9 @@
 #include <stdlib.h>
 #include <string.h>
 
+#include "config.h"
+#include "logger/logger.h"
+
 char *remove_line_return(char *conf)
 {
     conf[strcspn(conf, "\n")] = 0;
@@ -148,6 +151,7 @@ struct config *parse_configuration(const char *path)
     }
 
     fclose(fp);
+    log_message("Parsing config complete");
     return conf;
 }
 

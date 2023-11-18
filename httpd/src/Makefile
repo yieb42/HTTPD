@@ -2,7 +2,12 @@ include flags.mk
 
 OBJ = main.o
 
-LIBS = config/libconfig.a
+LIBS = config/libconfig.a \
+	utils/libutils.a \
+	server/libserver.a \
+	http/libhttp.a \
+	logger/liblogger.a
+
 
 all: httpd
 

@@ -1,11 +1,11 @@
 include ../flags.mk
 
-MODULE = config
-OBJ = $(MODULE).o
+MODULE = utils
+OBJ = string/string.o \
+	  prettyprinter/prettyprinter.o
 LIB = lib$(MODULE).a
 
-LIBS = utils/libutils.a \
-	   logger/liblogger.a # Other modules your library may be dependent on
+LIBS = # Other modules your library may be dependent on
 
 LDLIBS = -lcriterion
 
