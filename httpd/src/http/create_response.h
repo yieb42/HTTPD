@@ -1,10 +1,12 @@
 #ifndef CREATE_RESPONSE_H
 #define CREATE_RESPONSE_H
 
-int file_char_count(char *path);
+#include "parse_request.h"
 
-char *body_from_file(char *path, char *body);
+int file_char_count(char *path, struct request *req);
 
-char *create_response(char *response, char *status_code, char *reason_phrase, int content_length, char *method, char *bodyy);
+char *body_from_file(char *path, char *body, struct request *req);
+
+char *create_response(struct request *req, char *config);
 
 #endif /* !CREATE_RESPONSE_H */

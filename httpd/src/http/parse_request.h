@@ -10,6 +10,8 @@ struct request
     int content_length;
     char *body;
     int err;
+    char *status_code;
+    char *reason_phrase;
 };
 
 struct request *parse_request(char response[]);

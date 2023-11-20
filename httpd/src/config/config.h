@@ -23,6 +23,7 @@ struct config
 
     struct server_config *servers;
     size_t nb_servers;
+    int error;
 };
 
 /*

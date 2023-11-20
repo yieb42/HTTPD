@@ -1,7 +1,8 @@
 #include "prettyprinter.h"
-#include "./config/config.h"
 
 #include <stdio.h>
+
+#include "./config/config.h"
 
 void pretty_print(char *path)
 {
@@ -9,7 +10,7 @@ void pretty_print(char *path)
     printf("le log_file est : %s\n", c->log_file);
     printf("log est : %s\n", c->log ? "true" : "false");
     printf("le pid_file est : %s\n", c->pid_file);
-    for (size_t i = 0; i < c->nb_servers;i++)
+    for (size_t i = 0; i < c->nb_servers; i++)
     {
         printf("------ vhost numero : %ld\n", i);
         printf("le server_name est : %s\n", c->servers[i].server_name->data);

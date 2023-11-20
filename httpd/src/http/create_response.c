@@ -1,29 +1,65 @@
-#include <stdio.h>
-#include <time.h>
-#include <string.h>
-
 #include "create_response.h"
 
-int file_char_count(char *path)
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
+#include <time.h>
+
+#include "../config/config.h"
+
+int file_char_count(char *server_conf, struct request *req)
 {
-    FILE *fd = fopen(path, "r");
-    if (fd == NULL)
+    struct config *c = parse_configuration(server_conf);
+    char *root_dir = malloc(strlen(c->servers[0].root_dir) + 1);
+    strcpy(root_dir, c->servers[0].root_dir);
+    char *default_file = NULL;
+    if (c->servers[0].default_file)
+    {
+        default_file = malloc(strlen(c->servers[0].default_file) + 1);
+        strcpy(default_file, c->servers[0].default_file);
+    }
+    else
+    {
+        default_file = malloc(11);
+        strcpy(default_file, "index.html");
+    }
+    root_dir = realloc(root_dir, strlen(root_dir) + strlen(req->target) + strlen(default_file) + 1);
+    strcat(root_dir, req->target);
+    strcat(root_dir, default_file);
+    // printf("LE PATH TO BODY : %s\n", root_dir);
+    FILE *fd = fopen(root_dir, "r");
+    if (fd == NULL) {
+        req->err = 2;
         return 0;
+    }
     int i = 0;
     int chr;
-    while ((chr =fgetc(fd)))
+    while ((chr = fgetc(fd)))
     {
         if (chr == EOF)
             break;
         i++;
     }
-    return i - 1;
+    free(root_dir);
+    free(default_file);
+    config_destroy(c);
+    return i;
     fclose(fd);
 }
 
-char *body_from_file(char *path, char *body)
+char *body_from_file(char *server_conf, char *body,struct request *req)
 {
-    FILE *fd = fopen(path, "r");
+    struct config *c = parse_configuration(server_conf);
+    char *root_dir = c->servers[0].root_dir;
+    char *default_file = c->servers[0].default_file;
+    if (default_file == NULL)
+    {
+        default_file = "index.html";
+    }
+    root_dir = realloc(root_dir, strlen(root_dir) + strlen(req->target) + strlen(default_file) + 1);
+    strcat(root_dir, req->target);
+    strcat(root_dir, default_file);
+    FILE *fd = fopen(root_dir, "r");
     if (fd == NULL)
     {
         return NULL;
@@ -36,47 +72,69 @@ char *body_from_file(char *path, char *body)
     return body;
 }
 
-char *create_response(char *response, char *status_code, char *reason_phrase, int content_length, char *method, char *bodyy)
+int int_length(int num, int base) {
+    if (num == 0)
+        return 1;
+
+    if (num < 0)
+        num = -num;
+    int j = 0;
+    while (num != 0) {
+        j++;
+        num = num / base;
+    }
+    return j;
+}
+
+char *create_response(struct request *req, char *config)
 {
-    if (!strcmp(method, "GET")) {
+    char *response;
+    char date[35];
+    time_t t;
+    struct tm *tmp;
+    time(&t);
+    tmp = gmtime(&t);
+    int content_length = file_char_count(config,req);
+    strftime(date, sizeof(date), "%a, %d %b %Y %T %Z", tmp);
+    if (!strcmp(req->method, "GET"))
+    {
         char *version = "HTTP/1.1";
-        //char *status_code = "200";
-        //char *reason_phrase = "OK";
-        char date[35];
-        time_t t;
-        struct tm *tmp;
-        time(&t);
-        tmp = localtime(&t);
-        strftime(date, sizeof(date), "%a, %d %b %Y %T %Z", tmp);
-        sprintf(response, "%s %s %s\r\nDate: %s\r\nContent length: %d\r\nConnection: close\r\n\r\n%s", version,
-                status_code, reason_phrase, date, content_length, bodyy);
+        char bodyy[500] = { 0 };
+        body_from_file(config, bodyy,req);
+        size_t size = strlen(version) + 1 + strlen(req->status_code) + 1 + strlen(req->reason_phrase) + 2 + 6 + strlen(date) +2 + 16 +
+                int_length(content_length,10)+2+17+4+ strlen(bodyy) + 1;
+        response = malloc(size);
+        sprintf(response,
+                "%s %s %s\r\nDate: %s\r\nContent length: %d\r\nConnection: "
+                "close\r\n\r\n%s",
+                version, req->status_code, req->reason_phrase, date, content_length,
+                bodyy);
         return response;
-    } else if (!strcmp(method, "HEAD")) {
+    }
+    else if (!strcmp(req->method, "HEAD"))
+    {
         char *version = "HTTP/1.1";
-        //char *status_code = "200";
-        //char *reason_phrase = "OK";
-        char date[35];
-        time_t t;
-        struct tm *tmp;
-        time(&t);
-        tmp = localtime(&t);
-        strftime(date, sizeof(date), "%a, %d %b %Y %T %Z", tmp);
-        sprintf(response, "%s %s %s\r\nDate: %s\r\nContent length: %d\r\nConnection: close\r\n", version, status_code,
-                reason_phrase, date, content_length);
+        size_t size = strlen(version) + 1 + strlen(req->status_code) + 1 + strlen(req->reason_phrase) + 2 + 6 + strlen(date) +2 + 16 +
+                      int_length(content_length,10)+2+17+4 + 1;
+        response = malloc(size);
+        sprintf(response,
+                "%s %s %s\r\nDate: %s\r\nContent length: %d\r\nConnection: "
+                "close\r\n\r\n",
+                version, req->status_code, req->reason_phrase, date, content_length);
         return response;
-    } else {
+    }
+    else
+    {
         char *version = "HTTP/1.1";
-        char *status_code = "405";
-        char *reason_phrase = "Method Not Allowed";
-        int content_length = 0;
-        char date[35];
-        time_t t;
-        struct tm *tmp;
-        time(&t);
-        tmp = localtime(&t);
-        strftime(date, sizeof(date), "%a, %d %b %Y %T %Z", tmp);
-        sprintf(response, "%s %s %s\r\nDate: %s\r\nContent length: %d\r\nConnection: close\n", version, status_code,
-                reason_phrase, date, content_length);
+        char *status_cde = "405";
+        char *reason_phras = "Method Not Allowed";
+        size_t size = strlen(version) + 1 + strlen(req->status_code) + 1 + strlen(req->reason_phrase) + 2 + 6 +
+                strlen(date) +2 + 16 + int_length(content_length,10)+2+17+4 + 1;
+        response = malloc(size);
+        sprintf(response,
+                "%s %s %s\r\nDate: %s\r\nContent length: %d\r\nConnection: "
+                "close\r\n\r\n",
+                version, status_cde, reason_phras, date, content_length);
         return response;
     }
 }

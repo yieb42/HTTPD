@@ -6,8 +6,8 @@
 #include <stdlib.h>
 #include <string.h>
 
+#include "../logger/logger.h"
 #include "config.h"
-#include "logger/logger.h"
 
 char *remove_line_return(char *conf)
 {
@@ -101,6 +101,7 @@ struct config *parse_server_config(struct config *conf, char *buff)
 struct config *parse_configuration(const char *path)
 {
     struct config *conf = calloc(1, sizeof(struct config));
+    conf->error = 0;
     conf->servers = malloc(sizeof(struct server_config));
     conf->log = true;
     conf->nb_servers = 0;
@@ -146,11 +147,13 @@ struct config *parse_configuration(const char *path)
     }
     if (check_config(conf) == false)
     {
-        config_destroy(conf);
-        return NULL;
+        conf->error = 1;
+        return conf;
     }
 
     fclose(fp);
+    if(buff)
+        free(buff);
     log_message("Parsing config complete");
     return conf;
 }
