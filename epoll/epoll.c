@@ -74,7 +74,7 @@ int main(int argc, char *argv[])
             bool quit = true;
             if (events[i].events & (EPOLLIN | EPOLLET))
             {
-                ssize_t readd = read(events[i].data.fd, buff, 32);
+                ssize_t readd = read(events[i].data.fd, buff, 1000);
                 if (readd == -1)
                 {
                     perror("error on read");
