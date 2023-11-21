@@ -71,7 +71,7 @@ int main(int argc, char *argv[])
         }
         for (int i = 0; i < nfds; i++)
         {
-            if (events[i].events & EPOLLIN)
+            if (events[i].events & (EPOLLIN | EPOLLET))
             {
                 ssize_t readd = read(events[i].data.fd, buff, 32);
                 if (readd == -1)
