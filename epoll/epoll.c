@@ -79,14 +79,15 @@ int main(int argc, char *argv[])
                     perror("error on read");
                     return 1;
                 }
-                if (handle_input(buff) == false)
-                {
-                    if (epoll_ctl(epollfd, EPOLL_CTL_DEL, pipefd, &ev) == -1)
-                        return 1;
-                    close(pipefd);
-                    close(epollfd);
-                    return 0;
-                }
+
+            }
+            if (handle_input(buff) == false)
+            {
+                if (epoll_ctl(epollfd, EPOLL_CTL_DEL, pipefd, &ev) == -1)
+                    return 1;
+                close(pipefd);
+                close(epollfd);
+                return 0;
             }
         }
     }
