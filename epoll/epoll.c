@@ -38,7 +38,7 @@ int main(int argc, char *argv[])
     struct epoll_event ev;
     struct epoll_event events[100];
 
-    int pipefd = open(argv[1], O_RDONLY);
+    int pipefd = open(argv[1], O_RDONLY | O_NONBLOCK);
     if (pipefd == -1)
     {
         perror("open");
@@ -71,6 +71,7 @@ int main(int argc, char *argv[])
         }
         for (int i = 0; i < nfds; i++)
         {
+            bool quit = true;
             if (events[i].events & (EPOLLIN | EPOLLET))
             {
                 ssize_t readd = read(events[i].data.fd, buff, 32);
@@ -79,9 +80,9 @@ int main(int argc, char *argv[])
                     perror("error on read");
                     return 1;
                 }
-
+                quit = handle_input(buff);
             }
-            if (handle_input(buff) == false)
+            if (quit == false)
             {
                 if (epoll_ctl(epollfd, EPOLL_CTL_DEL, pipefd, &ev) == -1)
                     return 1;
