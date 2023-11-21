@@ -60,9 +60,9 @@ int main(int argc, char *argv[])
         return 1;
     }
 
-    char buff[1000] = { 0 };
     while (1)
     {
+        char buff[1000] = { 0 };
         nfds = epoll_wait(epollfd, events, 100, -1);
         if (nfds == -1)
         {
