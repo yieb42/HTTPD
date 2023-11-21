@@ -5,7 +5,7 @@
 #include <sys/epoll.h>
 #include <unistd.h>
 
-bool handle_input(char *buff, int pipefd, int epollfd)
+bool handle_input(char *buff)
 {
     if (strcmp(buff, "pong") == 0)
     {
@@ -18,8 +18,6 @@ bool handle_input(char *buff, int pipefd, int epollfd)
     else if (strcmp(buff, "quit") == 0)
     {
         printf("quit\n");
-        close(pipefd);
-        close(epollfd);
         return false;
     }
     else
@@ -81,12 +79,12 @@ int main(int argc, char *argv[])
                     perror("error on read");
                     return 1;
                 }
-                if (handle_input(buff, pipefd, epollfd) == false)
+                if (handle_input(buff) == false)
                 {
                     if (epoll_ctl(epollfd, EPOLL_CTL_DEL, pipefd, &ev) == -1)
-                    {
                         return 1;
-                    }
+                    close(pipefd);
+                    close(epollfd);
                     return 0;
                 }
             }
