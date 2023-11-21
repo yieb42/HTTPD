@@ -10,6 +10,59 @@
 #include "utils/prettyprinter/prettyprinter.h"
 #include "utils/string/string.h"
 
+int launch_daemon(char *arg2, char *arg3)
+{
+    if (!strcmp(arg2, "start"))
+    {
+        log_message("start daemon");
+        struct config *c = parse_configuration(arg3);
+        if (c->log_file == NULL)
+        {
+            setup_logging(c->log, "HTTPd.log ");
+        }
+        else
+            setup_logging(c->log, c->log_file);
+        char *pid_file = malloc(strlen(c->pid_file) + 1);
+        strcpy(pid_file, c->pid_file);
+        config_destroy(c);
+        return start(pid_file, arg3);
+    }
+    else if (!strcmp(arg2, "stop"))
+    {
+        log_message("stop daemon");
+        struct config *c = parse_configuration(arg3);
+        if (c->log_file == NULL)
+        {
+            setup_logging(c->log, "HTTPd.log ");
+        }
+        else
+            setup_logging(c->log, c->log_file);
+        char *pid_file = malloc(strlen(c->pid_file) + 1);
+        strcpy(pid_file, c->pid_file);
+        config_destroy(c);
+        return stop(pid_file);
+    }
+    else if (!strcmp(arg2, "restart"))
+    {
+        log_message("restart daemon");
+        struct config *c = parse_configuration(arg3);
+        if (c->log_file == NULL)
+        {
+            setup_logging(c->log, "HTTPd.log ");
+        }
+        else
+            setup_logging(c->log, c->log_file);
+        char *pid_file = malloc(strlen(c->pid_file) + 1);
+        strcpy(pid_file, c->pid_file);
+        config_destroy(c);
+        return restart(pid_file, arg3);
+    }
+    else
+    {
+        return 1;
+    }
+}
+
 int main(int argc, char *argv[])
 {
     if (argc == 0)
@@ -41,71 +94,7 @@ int main(int argc, char *argv[])
     }
     else if (argc == 4)
     {
-        if (!strcmp(argv[2], "start"))
-        {
-            log_message("start daemon");
-            struct config *c = parse_configuration(argv[3]);
-            if (c->log_file == NULL)
-            {
-                setup_logging(c->log, "HTTPd.log ");
-            }
-            else
-                setup_logging(c->log, c->log_file);
-            char *pid_file = malloc(strlen(c->pid_file) + 1);
-            strcpy(pid_file, c->pid_file);
-            config_destroy(c);
-            return start(pid_file, argv[3]);
-        }
-        else if (!strcmp(argv[2], "stop"))
-        {
-            log_message("stop daemon");
-            struct config *c = parse_configuration(argv[3]);
-            if (c->log_file == NULL)
-            {
-                setup_logging(c->log, "HTTPd.log ");
-            }
-            else
-                setup_logging(c->log, c->log_file);
-            char *pid_file = malloc(strlen(c->pid_file) + 1);
-            strcpy(pid_file, c->pid_file);
-            config_destroy(c);
-            return stop(pid_file);
-        }
-        else if (!strcmp(argv[2], "restart"))
-        {
-            log_message("restart daemon");
-            struct config *c = parse_configuration(argv[3]);
-            if (c->log_file == NULL)
-            {
-                setup_logging(c->log, "HTTPd.log ");
-            }
-            else
-                setup_logging(c->log, c->log_file);
-            char *pid_file = malloc(strlen(c->pid_file) + 1);
-            strcpy(pid_file, c->pid_file);
-            config_destroy(c);
-            return restart(pid_file, argv[3]);
-        }
-        else
-        {
-            return 1;
-        }
+        return launch_daemon(argv[2], argv[3]);
     }
     return 1;
-
-    /*
-    printf("le log_file est : %s\n", c->log_file);
-    printf("log est : %s\n", c->log ? "true" : "false");
-    printf("le pid_file est : %s\n", c->pid_file);
-    for (size_t i = 0; i < c->nb_servers;i++)
-    {
-        printf("------ vhost numero : %ld\n", i);
-        printf("le server_name est : %s\n", c->servers[i].server_name->data);
-        printf("le port est : %s\n", c->servers[i].port);
-        printf("l'ip est : %s\n", c->servers[i].ip);
-        printf("le default_file est : %s\n", c->servers[i].default_file);
-        printf("le root_dir est : %s\n", c->servers[i].root_dir);
-    }
-    config_destroy(c);
-    return 0;*/
 }

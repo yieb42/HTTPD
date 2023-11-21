@@ -152,7 +152,7 @@ struct config *parse_configuration(const char *path)
     }
 
     fclose(fp);
-    if(buff)
+    if (buff)
         free(buff);
     log_message("Parsing config complete");
     return conf;

@@ -8,19 +8,16 @@
 #include <stdlib.h>
 #include <string.h>
 #include <sys/socket.h>
-#include <sys/types.h>
-#include <time.h>
 #include <unistd.h>
 
-#include "../config/config.h"
-#include "../http/create_response.h"
-#include "../http/parse_request.h"
-#include "../logger/logger.h"
+#include "config/config.h"
+#include "http/create_response.h"
+#include "http/parse_request.h"
+#include "logger/logger.h"
 
 int create_and_bind(const char *node, const char *service)
 {
     struct addrinfo hints = { 0 };
-    // memset(&hints, 0, sizeof(struct addrinfo));
     hints.ai_family = AF_INET;
     hints.ai_socktype = SOCK_STREAM;
     hints.ai_protocol = IPPROTO_TCP;
@@ -39,7 +36,8 @@ int create_and_bind(const char *node, const char *service)
             continue;
 
         int yes = 1;
-        setsockopt(sock, SOL_SOCKET, SO_RCVTIMEO | SO_REUSEADDR, &yes, sizeof(yes));
+        setsockopt(sock, SOL_SOCKET, SO_RCVTIMEO | SO_REUSEADDR, &yes,
+                   sizeof(yes));
 
         if (bind(sock, p->ai_addr, p->ai_addrlen) != -1)
             break;
@@ -56,29 +54,41 @@ int create_and_bind(const char *node, const char *service)
     return sock;
 }
 
-int server(char *config)
+void send_res(int client_sock, char *response)
 {
-    struct config *conf = parse_configuration(config);
-    int erreur = 0;
-    if (conf->error == 1)
+    ssize_t nb_sent;
+    size_t total_sent = 0;
+    while ((nb_sent = send(client_sock, response, strlen(response) - total_sent,
+                           MSG_NOSIGNAL))
+           > 0)
     {
-        erreur = 1;
-    }
-    char *ip = conf->servers[0].ip;
-    char *port = conf->servers[0].port;
-    int listening_sock = create_and_bind(ip, port);
-    if (listening_sock == -1)
-    {
-        config_destroy(conf);
-        return 2;
+        total_sent += nb_sent;
     }
 
-    if (listen(listening_sock, 30) == -1)
+    close(client_sock);
+}
+
+void check_error(struct config *conf, struct request *req)
+{
+    if (conf->error == 1 || req->err == 1)
     {
-        config_destroy(conf);
-        return 3;
+        req->status_code = "400";
+        req->reason_phrase = "Bad Request";
     }
-    //config_destroy(conf);
+    if (req->err == 2)
+    {
+        req->status_code = "203";
+        req->reason_phrase = "Forbidden";
+    }
+    if (req->err == 3)
+    {
+        req->status_code = "404";
+        req->reason_phrase = "Not Found";
+    }
+}
+
+void server_loop(int listening_sock, struct config *conf, char *config)
+{
     while (1)
     {
         int client_sock = accept(listening_sock, NULL, NULL);
@@ -107,63 +117,58 @@ int server(char *config)
             continue;
         }
         struct request *req = parse_request(buff);
-        // printf("IP:PORT -> %s\n", ipport);
-        //int content_length = file_char_count(config);
-        char *ipport = strdup(conf->servers[0].ip);
+
         size_t size =
-                strlen(conf->servers[0].ip) + strlen(conf->servers[0].port) + 2;
-        ipport = realloc(ipport, size);
-        strcat(ipport, ":");
-        strcat(ipport, conf->servers[0].port);
-//        char *cpy_ipport = malloc(strlen(ipport)+1);
-//        strcpy(cpy_ipport, ipport);
-        char *message = strdup("Preparing server on ");
-        size_t message_size = strlen(message) + strlen(ipport) + 1;
-        message = realloc(message, message_size);
-        strcat(message, ipport);
+            strlen(conf->servers[0].ip) + strlen(conf->servers[0].port) + 2;
+
+        char *ipport = malloc(size);
+        char *message = malloc(size + 22);
+        snprintf(ipport, size, "%s:%s", conf->servers[0].ip,
+                 conf->servers[0].port);
+        snprintf(message, size + 22, "Preparing on server : %s:%s",
+                 conf->servers[0].ip, conf->servers[0].port);
         log_message(message);
-//        free(ipport);
-//        free(message);
-        if (strcmp(req->host,conf->servers[0].ip) != 0 &&
-                          strcmp(req->host,conf->servers[0].server_name->data) != 0 &&
-                          strcmp(req->host,ipport) != 0)
+
+        if (strcmp(req->host, conf->servers[0].ip) != 0
+            && strcmp(req->host, conf->servers[0].server_name->data) != 0
+            && strcmp(req->host, ipport) != 0)
         {
-            //GERER L'ERREUR INVALID HOST
             log_message("SERVER : INVALID HOST");
             printf("INVALID HOST");
             conf->error = 1;
         }
         free(ipport);
         free(message);
-        //char response[2000];
-        req->status_code = "200";
-        //char *status_code = "200";
-        req->reason_phrase = "OK";
-        //char *reason_phrase = "OK";
-        if (erreur == 1 || req->err == 1)
-        {
-            req->status_code = "400";
-            req->reason_phrase ="Bad Request";
-        }
-        if (req->err == 2)
-        {
-            req->status_code = "203";
-            req->reason_phrase = "Forbidden";
-        }
-        char* response = create_response(req,config);
-        // printf("%s\n",response);
-        log_message(response);
-        ssize_t nb_sent;
-        size_t total_sent = 0;
-        while ((nb_sent = send(client_sock, response,
-                               strlen(response) - total_sent, MSG_NOSIGNAL))
-               > 0)
-        {
-            total_sent += nb_sent;
-        }
 
-        // printf("LA RESPONSE : %s\n", buff);
-        close(client_sock);
+        req->status_code = "200";
+        req->reason_phrase = "OK";
+
+        check_error(conf, req);
+        char *response = create_response(req, config);
+
+        log_message(response);
+        send_res(client_sock, response);
     }
+}
+
+int server(char *config)
+{
+    struct config *conf = parse_configuration(config);
+    char *ip = conf->servers[0].ip;
+    char *port = conf->servers[0].port;
+    int listening_sock = create_and_bind(ip, port);
+    if (listening_sock == -1)
+    {
+        config_destroy(conf);
+        return 2;
+    }
+
+    if (listen(listening_sock, 30) == -1)
+    {
+        config_destroy(conf);
+        return 3;
+    }
+
+    server_loop(listening_sock, conf, config);
     return 0;
 }

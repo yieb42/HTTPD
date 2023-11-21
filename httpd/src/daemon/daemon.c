@@ -14,7 +14,6 @@
 
 int start(char *pid_path, char *server_conf)
 {
-    // FILE *fd = fopen(pid_path,"r");
     int f = open(pid_path, O_RDONLY);
     if (f == -1)
     {
@@ -34,7 +33,6 @@ int start(char *pid_path, char *server_conf)
         }
         close(f);
     }
-    // int fp = open(pid_path, O_WRONLY | O_CREAT);
     FILE *fp = fopen(pid_path, "w");
     if (fp == NULL)
     {
@@ -54,7 +52,6 @@ int start(char *pid_path, char *server_conf)
     {
         fprintf(fp, "%d", getpid());
         fclose(fp);
-        // config_destroy(conf);
         free(pid_path);
         server(server_conf);
     }
@@ -64,7 +61,6 @@ int start(char *pid_path, char *server_conf)
         free(pid_path);
         fclose(fp);
     }
-    // free(pid_path);
     return 0;
 }
 
@@ -92,10 +88,9 @@ int stop(char *pid_path)
                 kill(ppid, SIGINT);
                 return 0;
             }
-            if(line)
+            if (line)
                 free(line);
         }
-        // return 0;
     }
     fclose(fd);
     remove(pid_path);
@@ -123,19 +118,16 @@ int restart(char *pid_path, char *server_conf)
             {
                 if (line)
                     free(line);
-                // free(pid_path);
                 char *cpy_pid_path = malloc(strlen(pid_path) + 1);
                 strcpy(cpy_pid_path, pid_path);
                 fclose(fd);
                 stop(pid_path);
-                // printf("popo\n");
                 return start(cpy_pid_path, server_conf);
             }
             else
             {
                 if (line)
                     free(line);
-                // free(pid_path);
                 char *cpy_pid_path = malloc(strlen(pid_path) + 1);
                 strcpy(cpy_pid_path, pid_path);
                 fclose(fd);
@@ -145,7 +137,7 @@ int restart(char *pid_path, char *server_conf)
         }
         else
         {
-            if(line)
+            if (line)
                 free(line);
             char *cpy_pid_path = malloc(strlen(pid_path) + 1);
             strcpy(cpy_pid_path, pid_path);

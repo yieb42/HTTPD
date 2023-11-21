@@ -14,7 +14,7 @@ void log_message(const char *message)
     }
 }
 
-void close_log_file()
+void close_log_file(void)
 {
     if (log_file != NULL && log_file != stdout)
     {
