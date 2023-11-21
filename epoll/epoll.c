@@ -60,7 +60,7 @@ int main(int argc, char *argv[])
         return 1;
     }
 
-    char buff[32] = { 0 };
+    char buff[1000] = { 0 };
     while (1)
     {
         nfds = epoll_wait(epollfd, events, 100, -1);
