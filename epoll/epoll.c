@@ -1,8 +1,33 @@
 #include <fcntl.h>
+#include <stdbool.h>
 #include <stdio.h>
 #include <string.h>
 #include <sys/epoll.h>
 #include <unistd.h>
+
+bool handle_input(char *buff, int pipefd, int epollfd)
+{
+    if (strcmp(buff, "pong") == 0)
+    {
+        printf("ping!\n");
+    }
+    else if (strcmp(buff, "ping") == 0)
+    {
+        printf("pong!\n");
+    }
+    else if (strcmp(buff, "quit") == 0)
+    {
+        printf("quit\n");
+        close(pipefd);
+        close(epollfd);
+        return false;
+    }
+    else
+    {
+        printf("Unknown: %s\n", buff);
+    }
+    return true;
+}
 
 int main(int argc, char *argv[])
 {
@@ -36,6 +61,7 @@ int main(int argc, char *argv[])
         perror("epoll ctl for epollfd");
         return 1;
     }
+
     char buff[32] = { 0 };
     while (1)
     {
@@ -55,27 +81,13 @@ int main(int argc, char *argv[])
                     perror("error on read");
                     return 1;
                 }
-
-                buff[readd] = '\0';
-
-                if (strcmp(buff, "pong") == 0)
+                if (!handle_input(buff, pipefd, epollfd))
                 {
-                    printf("ping!\n");
-                }
-                else if (strcmp(buff, "ping") == 0)
-                {
-                    printf("pong!\n");
-                }
-                else if (strcmp(buff, "quit") == 0)
-                {
-                    printf("quit\n");
-                    close(pipefd);
-                    close(epollfd);
+                    if (epoll_ctl(epollfd, EPOLL_CTL_DEL, pipefd, &ev) == -1)
+                    {
+                        return 1;
+                    }
                     return 0;
-                }
-                else
-                {
-                    printf("Unknown: %s\n", buff);
                 }
             }
         }
