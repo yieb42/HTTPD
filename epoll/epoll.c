@@ -81,7 +81,7 @@ int main(int argc, char *argv[])
                     perror("error on read");
                     return 1;
                 }
-                if (!handle_input(buff, pipefd, epollfd))
+                if (handle_input(buff, pipefd, epollfd) == false)
                 {
                     if (epoll_ctl(epollfd, EPOLL_CTL_DEL, pipefd, &ev) == -1)
                     {
