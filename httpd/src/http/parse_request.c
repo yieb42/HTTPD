@@ -38,6 +38,22 @@ struct request *parse_request(char response[])
     {
         req->err = 1;
     }
-
+    free(line);
     return req;
+}
+
+void request_destroy(struct request *req)
+{
+    if (req->method)
+        free(req->method);
+    if (req->target)
+        free(req->target);
+    if (req->http)
+        free(req->http);
+    if (req->body)
+        free(req->body);
+    if (req->status_code)
+        free(req->status_code);
+    if (req->reason_phrase)
+        free(req->reason_phrase);
 }

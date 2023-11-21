@@ -15,4 +15,7 @@ struct request
 };
 
 struct request *parse_request(char response[]);
+
+void request_destroy(struct request *req);
+
 #endif /* !PARSE_REQUEST_H */

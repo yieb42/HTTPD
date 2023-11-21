@@ -87,6 +87,35 @@ void check_error(struct config *conf, struct request *req)
     }
 }
 
+static void check_req(struct config *conf, struct request *req)
+{
+    size_t size =
+        strlen(conf->servers[0].ip) + strlen(conf->servers[0].port) + 2;
+
+    char *ipport = malloc(size);
+    char *message = malloc(size + 22);
+    snprintf(ipport, size, "%s:%s", conf->servers[0].ip, conf->servers[0].port);
+    snprintf(message, size + 22, "Preparing on server : %s:%s",
+             conf->servers[0].ip, conf->servers[0].port);
+    log_message(message);
+
+    if (strcmp(req->host, conf->servers[0].ip) != 0
+        && strcmp(req->host, conf->servers[0].server_name->data) != 0
+        && strcmp(req->host, ipport) != 0)
+    {
+        log_message("SERVER : INVALID HOST");
+        printf("INVALID HOST");
+        conf->error = 1;
+    }
+    free(ipport);
+    free(message);
+
+    req->status_code = "200";
+    req->reason_phrase = "OK";
+
+    check_error(conf, req);
+}
+
 void server_loop(int listening_sock, struct config *conf, char *config)
 {
     while (1)
@@ -118,36 +147,13 @@ void server_loop(int listening_sock, struct config *conf, char *config)
         }
         struct request *req = parse_request(buff);
 
-        size_t size =
-            strlen(conf->servers[0].ip) + strlen(conf->servers[0].port) + 2;
+        check_req(conf, req);
 
-        char *ipport = malloc(size);
-        char *message = malloc(size + 22);
-        snprintf(ipport, size, "%s:%s", conf->servers[0].ip,
-                 conf->servers[0].port);
-        snprintf(message, size + 22, "Preparing on server : %s:%s",
-                 conf->servers[0].ip, conf->servers[0].port);
-        log_message(message);
-
-        if (strcmp(req->host, conf->servers[0].ip) != 0
-            && strcmp(req->host, conf->servers[0].server_name->data) != 0
-            && strcmp(req->host, ipport) != 0)
-        {
-            log_message("SERVER : INVALID HOST");
-            printf("INVALID HOST");
-            conf->error = 1;
-        }
-        free(ipport);
-        free(message);
-
-        req->status_code = "200";
-        req->reason_phrase = "OK";
-
-        check_error(conf, req);
         char *response = create_response(req, config);
 
         log_message(response);
         send_res(client_sock, response);
+        free(response);
     }
 }
 
