@@ -98,18 +98,8 @@ struct config *parse_server_config(struct config *conf, char *buff)
     return conf;
 }
 
-struct config *parse_configuration(const char *path)
+struct config *parse_configuration_helper(struct config *conf, FILE *fp)
 {
-    struct config *conf = calloc(1, sizeof(struct config));
-    conf->error = 0;
-    conf->servers = malloc(sizeof(struct server_config));
-    conf->log = true;
-    conf->nb_servers = 0;
-    FILE *fp = fopen(path, "r");
-    if (!fp)
-    {
-        return NULL;
-    }
     char *buff = NULL;
     size_t len = 0;
     ssize_t read;
@@ -137,6 +127,26 @@ struct config *parse_configuration(const char *path)
         }
         conf = parse_server_config(conf, buff);
     }
+    if (buff)
+        free(buff);
+    return conf;
+}
+
+struct config *parse_configuration(const char *path)
+{
+    struct config *conf = calloc(1, sizeof(struct config));
+    conf->error = 0;
+    conf->servers = malloc(sizeof(struct server_config));
+    conf->log = true;
+    conf->nb_servers = 0;
+    FILE *fp = fopen(path, "r");
+    if (!fp)
+    {
+        return NULL;
+    }
+
+    conf = parse_configuration_helper(conf, fp);
+
     if (conf->nb_servers == 0)
     {
         free(conf->servers);
@@ -152,8 +162,6 @@ struct config *parse_configuration(const char *path)
     }
 
     fclose(fp);
-    if (buff)
-        free(buff);
     log_message("Parsing config complete");
     return conf;
 }

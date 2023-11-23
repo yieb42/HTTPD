@@ -104,7 +104,6 @@ static void check_req(struct config *conf, struct request *req)
         && strcmp(req->host, ipport) != 0)
     {
         log_message("SERVER : INVALID HOST");
-        printf("INVALID HOST");
         conf->error = 1;
     }
     free(ipport);

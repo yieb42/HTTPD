@@ -105,7 +105,7 @@ char *body_from_file(char *server_conf, char *body, struct request *req)
     return body;
 }
 
-int int_length(int num, int base)
+static int int_length(int num, int base)
 {
     if (num == 0)
         return 1;
@@ -129,7 +129,7 @@ size_t get_size(char *version, struct request *req, char *date,
         + int_length(content_length, 10) + 2 + 17 + 4 + 1;
 }
 
-char *get_date(void)
+static char *get_date(void)
 {
     char date[35] = { 0 };
     time_t t;
@@ -141,49 +141,104 @@ char *get_date(void)
     return ret;
 }
 
+static int check_errors(char *config, struct request *req)
+{
+    struct config *conf = parse_configuration(config);
+    if (conf->error == 1 || req->err == 1)
+    {
+        req->status_code = "400";
+        req->reason_phrase = "Bad Request";
+        req->content_length = 0;
+        return 1;
+    }
+    else if (req->err == 2)
+    {
+        req->status_code = "203";
+        req->reason_phrase = "Forbidden";
+        req->content_length = 0;
+        return 1;
+    }
+    else if (req->err == 3)
+    {
+        req->status_code = "404";
+        req->reason_phrase = "Not Found";
+        req->content_length = 0;
+        return 1;
+    }
+    return 0;
+}
+
+static char *get_method(char *config, struct request *req, int content_length,
+                        char *date)
+{
+    char *response;
+    char *version = "HTTP/1.1";
+    char bodyy[500] = { 0 };
+    body_from_file(config, bodyy, req);
+    size_t size = strlen(version) + 1 + strlen(req->status_code) + 1
+        + strlen(req->reason_phrase) + 2 + 6 + strlen(date) + 2 + 16
+        + int_length(content_length, 10) + 2 + 17 + 4 + strlen(bodyy) + 1;
+    response = malloc(size);
+    sprintf(response,
+            "%s %s %s\r\nDate: %s\r\nContent-Length: %d\r\nConnection: "
+            "close\r\n\r\n%s",
+            version, req->status_code, req->reason_phrase, date, content_length,
+            bodyy);
+    return response;
+}
+
+static char *head_method(struct request *req, int content_length, char *date)
+{
+    char *response;
+    char *version = "HTTP/1.1";
+    size_t size = get_size(version, req, date, content_length);
+    response = malloc(size);
+    sprintf(response,
+            "%s %s %s\r\nDate: %s\r\nContent-Length: %d\r\nConnection: "
+            "close\r\n\r\n",
+            version, req->status_code, req->reason_phrase, date,
+            content_length);
+    return response;
+}
+
 char *create_response(struct request *req, char *config)
 {
     char *response;
     char *date = get_date();
     int content_length = file_char_count(config, req);
-    if (!strcmp(req->method, "GET"))
-    {
-        char *version = "HTTP/1.1";
-        char bodyy[500] = { 0 };
-        body_from_file(config, bodyy, req);
-        size_t size = strlen(version) + 1 + strlen(req->status_code) + 1
-            + strlen(req->reason_phrase) + 2 + 6 + strlen(date) + 2 + 16
-            + int_length(content_length, 10) + 2 + 17 + 4 + strlen(bodyy) + 1;
-        response = malloc(size);
-        sprintf(response,
-                "%s %s %s\r\nDate: %s\r\nContent length: %d\r\nConnection: "
-                "close\r\n\r\n%s",
-                version, req->status_code, req->reason_phrase, date,
-                content_length, bodyy);
-    }
-    else if (!strcmp(req->method, "HEAD"))
+    int err = check_errors(config, req);
+    if (err == 1)
     {
         char *version = "HTTP/1.1";
         size_t size = get_size(version, req, date, content_length);
         response = malloc(size);
         sprintf(response,
-                "%s %s %s\r\nDate: %s\r\nContent length: %d\r\nConnection: "
+                "%s %s %s\r\nDate: %s\r\nContent-Length: %d\r\nConnection: "
                 "close\r\n\r\n",
                 version, req->status_code, req->reason_phrase, date,
                 content_length);
     }
+    if (!strcmp(req->method, "GET"))
+    {
+        response = get_method(config, req, content_length, date);
+    }
+    else if (!strcmp(req->method, "HEAD"))
+    {
+        response = head_method(req, content_length, date);
+    }
     else
     {
         char *version = "HTTP/1.1";
-        char *status_cde = "405";
-        char *reason_phras = "Method Not Allowed";
-        content_length = 0;
+        req->status_code = "405";
+        req->reason_phrase = "Method Not Allowed";
+        req->content_length = 0;
         size_t size = get_size(version, req, date, content_length);
         response = malloc(size);
         sprintf(response,
-                "%s %s %s\r\nDate: %s\r\nContent length: %d\r\nConnection: "
+                "%s %s %s\r\nDate: %s\r\nContent-Length: %d\r\nConnection: "
                 "close\r\n\r\n",
-                version, status_cde, reason_phras, date, content_length);
+                version, req->status_code, req->reason_phrase, date,
+                req->content_length);
     }
     free(date);
     return response;

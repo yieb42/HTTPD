@@ -69,7 +69,8 @@ int stop(char *pid_path)
     FILE *fd = fopen(pid_path, "r");
     if (fd == NULL)
     {
-        return 1;
+        free(pid_path);
+        return 0;
     }
     if (fd != NULL)
     {

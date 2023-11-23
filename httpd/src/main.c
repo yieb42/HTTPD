@@ -66,10 +66,19 @@ int launch_daemon(char *arg2, char *arg3)
 int main(int argc, char *argv[])
 {
     if (argc == 0)
+    {
+        perror("Usage : ./httpd [--dry-run] [-a (start | stop | reload | "
+               "restart)] <server.conf>");
         return 1;
+    }
     else if (argc == 2)
     {
         struct config *c = parse_configuration(argv[1]);
+        if (c == NULL)
+        {
+            perror("error in parse file doesnt exist");
+            return 1;
+        }
         setup_logging(c->log, c->log_file);
         log_message("starting server");
         server(argv[1]);
@@ -85,7 +94,7 @@ int main(int argc, char *argv[])
             if (c->error != 0)
             {
                 config_destroy(c);
-                fprintf(stderr, "ERROR PARSING CONFIGURATION FILE\n");
+                perror("ERROR PARSING CONFIGURATION FILE\n");
                 return 2;
             }
             config_destroy(c);
@@ -96,5 +105,7 @@ int main(int argc, char *argv[])
     {
         return launch_daemon(argv[2], argv[3]);
     }
+    perror("Usage : ./httpd [--dry-run] [-a (start | stop | reload | restart)] "
+           "<server.conf>");
     return 1;
 }
