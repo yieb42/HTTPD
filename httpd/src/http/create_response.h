@@ -5,7 +5,7 @@
 
 int file_char_count(char *path, struct request *req);
 
-char *body_from_file(char *path, char *body, struct request *req);
+char *body_from_file(char *path, struct request *req);
 
 char *create_response(struct request *req, char *config);
 

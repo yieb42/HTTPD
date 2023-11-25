@@ -87,7 +87,7 @@ int file_char_count(char *server_conf, struct request *req)
     return i;
 }
 
-char *body_from_file(char *server_conf, char *body, struct request *req)
+char *body_from_file(char *server_conf, struct request *req)
 {
     char *root_dir = set_path(server_conf, req);
     FILE *fd = fopen(root_dir, "r");
@@ -96,11 +96,28 @@ char *body_from_file(char *server_conf, char *body, struct request *req)
         req->err = 3;
         return NULL;
     }
-    char buff[1024];
-    while (fgets(buff, 1024, fd) != NULL)
+
+    fseek(fd, 0, SEEK_END);
+    size_t file_size = ftell(fd);
+    fseek(fd, 0, SEEK_SET);
+
+    char *body = malloc(file_size + 1);
+    if (body == NULL)
     {
-        strcat(body, buff);
+        fclose(fd);
+        return NULL;
     }
+
+    size_t bytesRead = fread(body, 1, file_size, fd);
+    if (bytesRead != file_size)
+    {
+        fclose(fd);
+        free(body);
+        return NULL;
+    }
+
+    body[file_size] = '\0';
+
     fclose(fd);
     return body;
 }
@@ -173,8 +190,7 @@ static char *get_method(char *config, struct request *req, int content_length,
 {
     char *response;
     char *version = "HTTP/1.1";
-    char bodyy[500] = { 0 };
-    body_from_file(config, bodyy, req);
+    char *bodyy = body_from_file(config, req);
     size_t size = strlen(version) + 1 + strlen(req->status_code) + 1
         + strlen(req->reason_phrase) + 2 + 6 + strlen(date) + 2 + 16
         + int_length(content_length, 10) + 2 + 17 + 4 + strlen(bodyy) + 1;
@@ -184,6 +200,7 @@ static char *get_method(char *config, struct request *req, int content_length,
             "close\r\n\r\n%s",
             version, req->status_code, req->reason_phrase, date, content_length,
             bodyy);
+    free(bodyy);
     return response;
 }
 

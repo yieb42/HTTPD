@@ -123,11 +123,11 @@ void server_loop(int listening_sock, struct config *conf, char *config)
         if (client_sock == -1)
             continue;
 
-        char buff[300];
+        char buff[3000];
         ssize_t nb_read;
         size_t total_read = 0;
         while ((nb_read =
-                    recv(client_sock, buff + total_read, 300 - total_read, 0))
+                    recv(client_sock, buff + total_read, 3000 - total_read, 0))
                > 0)
         {
             char *end_header = strstr(buff + total_read, "\r\n\r\n");
@@ -137,7 +137,6 @@ void server_loop(int listening_sock, struct config *conf, char *config)
                 total_read = index;
                 break;
             }
-            total_read += nb_read;
         }
         if (nb_read == -1)
         {
@@ -145,7 +144,6 @@ void server_loop(int listening_sock, struct config *conf, char *config)
             continue;
         }
         struct request *req = parse_request(buff);
-
         check_req(conf, req);
 
         char *response = create_response(req, config);
