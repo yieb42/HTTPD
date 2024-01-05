@@ -3,6 +3,7 @@
 #include "server.h"
 
 #include <netdb.h>
+#include <signal.h>
 #include <stddef.h>
 #include <stdio.h>
 #include <stdlib.h>
@@ -14,6 +15,14 @@
 #include "http/create_response.h"
 #include "http/parse_request.h"
 #include "logger/logger.h"
+
+static int boucle = 1;
+
+void graceful_shutdown(int arg)
+{
+    boucle = 0;
+    printf("%d\n", arg);
+}
 
 int create_and_bind(const char *node, const char *service)
 {
@@ -117,7 +126,17 @@ static void check_req(struct config *conf, struct request *req)
 
 void server_loop(int listening_sock, struct config *conf, char *config)
 {
-    while (1)
+    struct sigaction action;
+    // memset(&action,0,sizeof(action));
+    action.sa_handler = graceful_shutdown;
+    sigemptyset(&action.sa_mask);
+    action.sa_flags = 0;
+    if (sigaction(SIGINT, &action, NULL) == -1)
+    {
+        perror("sigaction error");
+        return;
+    }
+    while (boucle)
     {
         int client_sock = accept(listening_sock, NULL, NULL);
         if (client_sock == -1)
@@ -151,7 +170,9 @@ void server_loop(int listening_sock, struct config *conf, char *config)
         log_message(response);
         send_res(client_sock, response);
         free(response);
+        request_destroy(req);
     }
+    config_destroy(conf);
 }
 
 int server(char *config)
@@ -160,6 +181,7 @@ int server(char *config)
     char *ip = conf->servers[0].ip;
     char *port = conf->servers[0].port;
     int listening_sock = create_and_bind(ip, port);
+
     if (listening_sock == -1)
     {
         config_destroy(conf);

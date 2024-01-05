@@ -104,6 +104,7 @@ char *body_from_file(char *server_conf, struct request *req)
     char *body = malloc(file_size + 1);
     if (body == NULL)
     {
+        req->err = 3;
         fclose(fd);
         return NULL;
     }
@@ -111,13 +112,14 @@ char *body_from_file(char *server_conf, struct request *req)
     size_t bytesRead = fread(body, 1, file_size, fd);
     if (bytesRead != file_size)
     {
+        req->err = 3;
         fclose(fd);
         free(body);
         return NULL;
     }
 
     body[file_size] = '\0';
-
+    free(root_dir);
     fclose(fd);
     return body;
 }
@@ -182,29 +184,11 @@ static int check_errors(char *config, struct request *req)
         req->content_length = 0;
         return 1;
     }
+    config_destroy(conf);
     return 0;
 }
 
-static char *get_method(char *config, struct request *req, int content_length,
-                        char *date)
-{
-    char *response;
-    char *version = "HTTP/1.1";
-    char *bodyy = body_from_file(config, req);
-    size_t size = strlen(version) + 1 + strlen(req->status_code) + 1
-        + strlen(req->reason_phrase) + 2 + 6 + strlen(date) + 2 + 16
-        + int_length(content_length, 10) + 2 + 17 + 4 + strlen(bodyy) + 1;
-    response = malloc(size);
-    sprintf(response,
-            "%s %s %s\r\nDate: %s\r\nContent-Length: %d\r\nConnection: "
-            "close\r\n\r\n%s",
-            version, req->status_code, req->reason_phrase, date, content_length,
-            bodyy);
-    free(bodyy);
-    return response;
-}
-
-static char *head_method(struct request *req, int content_length, char *date)
+char *head_method(struct request *req, int content_length, char *date)
 {
     char *response;
     char *version = "HTTP/1.1";
@@ -215,6 +199,39 @@ static char *head_method(struct request *req, int content_length, char *date)
             "close\r\n\r\n",
             version, req->status_code, req->reason_phrase, date,
             content_length);
+    return response;
+}
+
+static char *get_method(char *config, struct request *req, int content_length,
+                        char *date)
+{
+    char *response;
+    char *version = "HTTP/1.1";
+    char *bodyy = body_from_file(config, req);
+    int sizee = 0;
+    if (bodyy == NULL)
+    {
+        req->err = 3;
+        check_errors(config, req);
+        return head_method(req, content_length, date);
+    }
+    else
+    {
+        sizee = strlen(bodyy);
+    }
+    size_t size = strlen(version) + 1 + strlen(req->status_code) + 1
+        + strlen(req->reason_phrase) + 2 + 6 + strlen(date) + 2 + 16
+        + int_length(content_length, 10) + 2 + 17 + 4 + sizee + 1;
+    response = malloc(size);
+    if (bodyy)
+    {
+        sprintf(response,
+                "%s %s %s\r\nDate: %s\r\nContent-Length: %d\r\nConnection: "
+                "close\r\n\r\n%s",
+                version, req->status_code, req->reason_phrase, date,
+                content_length, bodyy);
+    }
+    free(bodyy);
     return response;
 }
 

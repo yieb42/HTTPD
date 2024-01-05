@@ -50,10 +50,5 @@ void request_destroy(struct request *req)
         free(req->target);
     if (req->http)
         free(req->http);
-    if (req->body)
-        free(req->body);
-    if (req->status_code)
-        free(req->status_code);
-    if (req->reason_phrase)
-        free(req->reason_phrase);
+    free(req);
 }
