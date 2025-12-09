@@ -95,8 +95,8 @@ Experience the VHost capabilities visually with the included demo.
     ./httpd -a start demo/demo.conf
     ```
 2.  **Open your browser:**
-    - [http://localhost:8080](http://localhost:8080) (Cyberpunk Theme)
-    - [http://localhost:8081](http://localhost:8081) (Nature Theme)
+    - [http://localhost:8080](http://localhost:8080)
+    - [http://localhost:8081](http://localhost:8081)
 3.  **Stop the demo:**
     ```bash
     ./httpd -a stop demo/demo.conf
