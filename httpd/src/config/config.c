@@ -168,13 +168,13 @@ struct config *parse_configuration(const char *path)
 
 void config_destroy(struct config *config)
 {
-    if (config->servers->server_name)
-    {
-        free(config->servers->server_name->data);
-        free(config->servers->server_name);
-    }
     for (size_t i = 0; i < config->nb_servers; i++)
     {
+        if (config->servers[i].server_name)
+        {
+            free(config->servers[i].server_name->data);
+            free(config->servers[i].server_name);
+        }
         free(config->servers[i].port);
         free(config->servers[i].ip);
         free(config->servers[i].root_dir);

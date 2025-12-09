@@ -1,0 +1,107 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>The Grove - 8081</title>
+    <style>
+        body {
+            background-color: #e8f5e9;
+            color: #2e7d32;
+            font-family: 'Georgia', serif;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            height: 100vh;
+            margin: 0;
+            overflow: hidden;
+        }
+
+        h1 {
+            font-size: 4rem;
+            font-weight: lighter;
+            letter-spacing: 5px;
+            animation: float 6s ease-in-out infinite;
+        }
+
+        p {
+            font-size: 1.5rem;
+            color: #4caf50;
+            font-style: italic;
+        }
+
+        .portal {
+            margin-top: 50px;
+            padding: 20px 40px;
+            background: #fff;
+            border: 1px solid #a5d6a7;
+            border-radius: 50px;
+            color: #2e7d32;
+            font-size: 1.2rem;
+            text-decoration: none;
+            box-shadow: 0 10px 20px rgba(0, 0, 0, 0.05);
+            transition: all 0.3s;
+        }
+
+        .portal:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 15px 30px rgba(0, 0, 0, 0.1);
+            background: #2e7d32;
+            color: #fff;
+        }
+
+        @keyframes float {
+            0% {
+                transform: translateY(0px);
+            }
+
+            50% {
+                transform: translateY(-20px);
+            }
+
+            100% {
+                transform: translateY(0px);
+            }
+        }
+
+        .leaf {
+            position: absolute;
+            width: 20px;
+            height: 20px;
+            background: #a5d6a7;
+            border-radius: 50% 0 50% 0;
+            opacity: 0.5;
+            animation: fall 15s linear infinite;
+        }
+
+        @keyframes fall {
+            0% {
+                top: -10%;
+                transform: rotate(0deg);
+                left: 10%;
+            }
+
+            100% {
+                top: 110%;
+                transform: rotate(360deg);
+                left: 20%;
+            }
+        }
+    </style>
+</head>
+
+<body>
+    <div class="leaf" style="left: 10%; animation-duration: 12s;"></div>
+    <div class="leaf" style="left: 30%; animation-duration: 18s; animation-delay: 2s;"></div>
+    <div class="leaf" style="left: 70%; animation-duration: 14s; animation-delay: 1s;"></div>
+    <div class="leaf" style="left: 90%; animation-duration: 16s; animation-delay: 4s;"></div>
+
+    <h1>The Grove (8081)</h1>
+    <p>Tranquility in the digital realm.</p>
+    <p>VHost Isolation: Confirmed.</p>
+    <a href="http://localhost:8080/index.html" class="portal">Return to Sector 8080</a>
+</body>
+
+</html>

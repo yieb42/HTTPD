@@ -9,18 +9,17 @@
 
 #include "../config/config.h"
 
-char *set_path(char *server_conf, struct request *req)
+char *set_path(struct server_config *c, struct request *req)
 {
-    struct config *c = parse_configuration(server_conf);
-    char *root_dir = malloc(strlen(c->servers[0].root_dir) + 1);
-    strcpy(root_dir, c->servers[0].root_dir);
+    char *root_dir = malloc(strlen(c->root_dir) + 1);
+    strcpy(root_dir, c->root_dir);
     char *default_file = NULL;
     if (strcmp(req->target, "/") == 0)
     {
-        if (c->servers[0].default_file)
+        if (c->default_file)
         {
-            default_file = malloc(strlen(c->servers[0].default_file) + 1);
-            strcpy(default_file, c->servers[0].default_file);
+            default_file = malloc(strlen(c->default_file) + 1);
+            strcpy(default_file, c->default_file);
         }
         else
         {
@@ -37,10 +36,10 @@ char *set_path(char *server_conf, struct request *req)
     {
         if (req->target[strlen(req->target) - 1] == '/')
         {
-            if (c->servers[0].default_file)
+            if (c->default_file)
             {
-                default_file = malloc(strlen(c->servers[0].default_file) + 1);
-                strcpy(default_file, c->servers[0].default_file);
+                default_file = malloc(strlen(c->default_file) + 1);
+                strcpy(default_file, c->default_file);
             }
             else
             {
@@ -61,17 +60,17 @@ char *set_path(char *server_conf, struct request *req)
         }
     }
     free(default_file);
-    config_destroy(c);
     return root_dir;
 }
 
-int file_char_count(char *server_conf, struct request *req)
+int file_char_count(struct server_config *c, struct request *req)
 {
-    char *root_dir = set_path(server_conf, req);
+    char *root_dir = set_path(c, req);
     FILE *fd = fopen(root_dir, "r");
     if (fd == NULL)
     {
         req->err = 3;
+        free(root_dir);
         return 0;
     }
     int i = 0;
@@ -87,13 +86,14 @@ int file_char_count(char *server_conf, struct request *req)
     return i;
 }
 
-char *body_from_file(char *server_conf, struct request *req)
+char *body_from_file(struct server_config *c, struct request *req)
 {
-    char *root_dir = set_path(server_conf, req);
+    char *root_dir = set_path(c, req);
     FILE *fd = fopen(root_dir, "r");
     if (fd == NULL)
     {
         req->err = 3;
+        free(root_dir);
         return NULL;
     }
 
@@ -106,6 +106,7 @@ char *body_from_file(char *server_conf, struct request *req)
     {
         req->err = 3;
         fclose(fd);
+        free(root_dir);
         return NULL;
     }
 
@@ -115,6 +116,7 @@ char *body_from_file(char *server_conf, struct request *req)
         req->err = 3;
         fclose(fd);
         free(body);
+        free(root_dir);
         return NULL;
     }
 
@@ -160,10 +162,9 @@ static char *get_date(void)
     return ret;
 }
 
-static int check_errors(char *config, struct request *req)
+static int check_errors(struct request *req)
 {
-    struct config *conf = parse_configuration(config);
-    if (conf->error == 1 || req->err == 1)
+    if (req->err == 1)
     {
         req->status_code = "400";
         req->reason_phrase = "Bad Request";
@@ -184,7 +185,6 @@ static int check_errors(char *config, struct request *req)
         req->content_length = 0;
         return 1;
     }
-    config_destroy(conf);
     return 0;
 }
 
@@ -202,17 +202,17 @@ char *head_method(struct request *req, int content_length, char *date)
     return response;
 }
 
-static char *get_method(char *config, struct request *req, int content_length,
+static char *get_method(struct server_config *c, struct request *req, int content_length,
                         char *date)
 {
     char *response;
     char *version = "HTTP/1.1";
-    char *bodyy = body_from_file(config, req);
+    char *bodyy = body_from_file(c, req);
     int sizee = 0;
     if (bodyy == NULL)
     {
         req->err = 3;
-        check_errors(config, req);
+        check_errors(req);
         return head_method(req, content_length, date);
     }
     else
@@ -235,12 +235,12 @@ static char *get_method(char *config, struct request *req, int content_length,
     return response;
 }
 
-char *create_response(struct request *req, char *config)
+char *create_response(struct request *req, struct server_config *c)
 {
     char *response;
     char *date = get_date();
-    int content_length = file_char_count(config, req);
-    int err = check_errors(config, req);
+    int content_length = file_char_count(c, req);
+    int err = check_errors(req);
     if (err == 1)
     {
         char *version = "HTTP/1.1";
@@ -254,7 +254,7 @@ char *create_response(struct request *req, char *config)
     }
     if (!strcmp(req->method, "GET"))
     {
-        response = get_method(config, req, content_length, date);
+        response = get_method(c, req, content_length, date);
     }
     else if (!strcmp(req->method, "HEAD"))
     {

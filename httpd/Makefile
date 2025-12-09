@@ -11,6 +11,7 @@ $(BINARY):
 	mv src/$(BINARY) .
 
 clean:
-	$(RM) $(OBJ) $(LIB) $(TEST_BIN) $(TEST_OBJ) $(addprefix $(SRC_DIR), $(LIBS))
+	$(MAKE) -C src clean
+	$(RM) $(BINARY)
 
 .PHONY: all

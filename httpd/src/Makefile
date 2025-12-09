@@ -18,4 +18,9 @@ httpd: $(OBJ) $(LIBS)
 
 include libs.mk
 
-.PHONY: all
+clean:
+	$(RM) $(OBJ) $(LIBS) httpd
+	find . -name "*.o" -delete
+	find . -name "*.a" -delete
+
+.PHONY: all clean
